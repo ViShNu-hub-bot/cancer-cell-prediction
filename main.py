@@ -7,7 +7,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
 import seaborn as sns
 import matplotlib.pyplot as plt
-st.set_page_config(page_title="Cancer Cell Classification")
+st.set_page_config(page_title="Cancer Cell Classifier")
 # Suppress the PyplotGlobalUseWarning
 st.set_option('deprecation.showPyplotGlobalUse', False)
 
