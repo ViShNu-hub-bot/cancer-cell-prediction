@@ -5,59 +5,51 @@ from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.ensemble import RandomForestClassifier
 from xgboost import XGBClassifier
 from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
+from sklearn.preprocessing import StandardScaler
 import seaborn as sns
 import matplotlib.pyplot as plt
 
 # Set page configuration
 st.set_page_config(page_title="Cancer Cell Classifier")
+st.set_option('deprecation.showPyplotGlobalUse', False)
 
 # Load dataset
 data = load_breast_cancer()
 label_names = data['target_names']
 labels = data['target']
-feature_names = data['feature_names']
 features = data['data']
 
 # Streamlit UI
 st.title('Breast Cancer Cell Classification')
 st.sidebar.header('User Input')
 
+# User input for test size and model selection
 test_size = st.sidebar.slider('Test Size', 0.1, 0.5, 0.33, 0.01)
 model_name = st.sidebar.selectbox('Select Model', ['XGBoost', 'Random Forest'])
 
-# Split data
+# Split data and apply scaling
 train, test, train_labels, test_labels = train_test_split(features, labels, test_size=test_size, random_state=42)
+scaler = StandardScaler()
+train = scaler.fit_transform(train)
+test = scaler.transform(test)
 
 # Model selection with hyperparameter tuning
 if model_name == 'XGBoost':
-    params = {
-        'learning_rate': [0.01, 0.1, 0.2],
-        'max_depth': [3, 5, 7],
-        'n_estimators': [50, 100, 150]
-    }
-    model = GridSearchCV(XGBClassifier(use_label_encoder=False, eval_metric='logloss', random_state=42), params, cv=5)
+    params = {'n_estimators': [50, 100, 150], 'learning_rate': [0.01, 0.1, 0.2]}
+    model = GridSearchCV(XGBClassifier(use_label_encoder=False, eval_metric='logloss', random_state=42), params, cv=3)
 elif model_name == 'Random Forest':
-    params = {
-        'n_estimators': [50, 100, 150],
-        'max_depth': [None, 10, 20, 30],
-        'min_samples_split': [2, 5, 10]
-    }
-    model = GridSearchCV(RandomForestClassifier(random_state=42), params, cv=5)
+    params = {'n_estimators': [50, 100, 200], 'max_depth': [5, 10, 15]}
+    model = GridSearchCV(RandomForestClassifier(random_state=42), params, cv=3)
 
 # Train model
 model.fit(train, train_labels)
-
-# Best parameters and model
-st.sidebar.subheader('Best Model Parameters')
-st.sidebar.write(model.best_params_)
+model = model.best_estimator_
 
 # Make predictions
 predictions = model.predict(test)
 
-# Accuracy
+# Accuracy and model performance
 accuracy = accuracy_score(test_labels, predictions)
-
-# Sidebar: Model Performance
 st.sidebar.subheader('Model Performance')
 st.sidebar.write(f'Accuracy: {accuracy:.2f}')
 
@@ -68,17 +60,26 @@ st.write(pd.DataFrame(report).transpose())
 
 # Confusion Matrix
 st.subheader('Confusion Matrix')
+cm = confusion_matrix(test_labels, predictions)
 fig, ax = plt.subplots()
-sns.heatmap(confusion_matrix(test_labels, predictions), annot=True, fmt='d', cmap='Blues', cbar=False, square=True, ax=ax)
+sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', cbar=False, square=True, ax=ax)
 ax.set_xlabel('Predicted')
 ax.set_ylabel('Actual')
 st.pyplot(fig)
 
-# Prediction Distribution
+# Prediction Distribution with Data Labels
 st.subheader('Prediction Distribution')
 correct_pred = (test_labels == predictions)
 pred_dist = pd.DataFrame({'Predictions': ['Correct', 'Incorrect'], 'Count': [correct_pred.sum(), len(test_labels) - correct_pred.sum()]})
-st.bar_chart(pred_dist.set_index('Predictions'))
+
+fig, ax = plt.subplots()
+bars = ax.bar(pred_dist['Predictions'], pred_dist['Count'])
+ax.set_title('Prediction Distribution')
+ax.set_ylabel('Count')
+for bar in bars:
+    yval = bar.get_height()
+    ax.text(bar.get_x() + bar.get_width()/2, yval, int(yval), ha='center', va='bottom')
+st.pyplot(fig)
 
 # Class Distribution
 st.subheader('Class Distribution')
