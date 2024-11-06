@@ -8,8 +8,8 @@ from sklearn.metrics import accuracy_score, confusion_matrix, classification_rep
 import seaborn as sns
 import matplotlib.pyplot as plt
 
+# Set page configuration
 st.set_page_config(page_title="Cancer Cell Classifier")
-st.set_option('deprecation.showPyplotGlobalUse', False)
 
 # Load dataset
 data = load_breast_cancer()
