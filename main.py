@@ -54,11 +54,11 @@ st.write(pd.DataFrame(report).transpose())
 
 # Confusion Matrix
 st.subheader('Confusion Matrix')
-cm = confusion_matrix(test_labels, predictions)
-sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', cbar=False, square=True)
-plt.xlabel('Predicted')
-plt.ylabel('Actual')
-st.pyplot()
+fig, ax = plt.subplots()
+sns.heatmap(confusion_matrix(test_labels, predictions), annot=True, fmt='d', cmap='Blues', cbar=False, square=True, ax=ax)
+ax.set_xlabel('Predicted')
+ax.set_ylabel('Actual')
+st.pyplot(fig)
 
 # Prediction Distribution
 st.subheader('Prediction Distribution')
@@ -69,9 +69,10 @@ st.bar_chart(pred_dist.set_index('Predictions'))
 # Class Distribution
 st.subheader('Class Distribution')
 class_dist = pd.Series(test_labels).value_counts()
-plt.pie(class_dist, labels=label_names, autopct='%1.1f%%')
-plt.title('Class Distribution')
-st.pyplot(plt.gcf(), use_container_width=True)
+fig, ax = plt.subplots()
+ax.pie(class_dist, labels=label_names, autopct='%1.1f%%')
+ax.set_title('Class Distribution')
+st.pyplot(fig)
 
 # Developer Info
 st.sidebar.subheader('Developed by:')
