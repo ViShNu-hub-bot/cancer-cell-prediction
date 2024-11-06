@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 from sklearn.datasets import load_breast_cancer
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.ensemble import RandomForestClassifier
 from xgboost import XGBClassifier
 from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
@@ -28,14 +28,28 @@ model_name = st.sidebar.selectbox('Select Model', ['XGBoost', 'Random Forest'])
 # Split data
 train, test, train_labels, test_labels = train_test_split(features, labels, test_size=test_size, random_state=42)
 
-# Model selection
+# Model selection with hyperparameter tuning
 if model_name == 'XGBoost':
-    model = XGBClassifier(use_label_encoder=False, eval_metric='logloss', random_state=42)
+    params = {
+        'learning_rate': [0.01, 0.1, 0.2],
+        'max_depth': [3, 5, 7],
+        'n_estimators': [50, 100, 150]
+    }
+    model = GridSearchCV(XGBClassifier(use_label_encoder=False, eval_metric='logloss', random_state=42), params, cv=5)
 elif model_name == 'Random Forest':
-    model = RandomForestClassifier(n_estimators=100, random_state=42)
+    params = {
+        'n_estimators': [50, 100, 150],
+        'max_depth': [None, 10, 20, 30],
+        'min_samples_split': [2, 5, 10]
+    }
+    model = GridSearchCV(RandomForestClassifier(random_state=42), params, cv=5)
 
 # Train model
 model.fit(train, train_labels)
+
+# Best parameters and model
+st.sidebar.subheader('Best Model Parameters')
+st.sidebar.write(model.best_params_)
 
 # Make predictions
 predictions = model.predict(test)
