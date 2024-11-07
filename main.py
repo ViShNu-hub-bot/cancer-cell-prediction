@@ -56,7 +56,15 @@ st.sidebar.write(f'Accuracy: {accuracy:.2f}')
 # Classification Report
 st.subheader('Classification Report')
 report = classification_report(test_labels, predictions, target_names=label_names, output_dict=True)
-st.write(pd.DataFrame(report).transpose())
+
+# Display the classification report with custom styling (black text)
+report_df = pd.DataFrame(report).transpose()
+
+# Convert the dataframe to an HTML table and add styling for black text
+html_report = report_df.to_html(classes='table table-bordered table-striped', escape=False)
+html_report = html_report.replace('<table', '<table style="color: black;"')
+
+st.markdown(html_report, unsafe_allow_html=True)
 
 # Confusion Matrix
 st.subheader('Confusion Matrix')
@@ -93,3 +101,4 @@ st.pyplot(fig)
 st.sidebar.subheader('Developed by:')
 st.sidebar.write('Vishnukanth K')
 st.sidebar.write('[LinkedIn](https://www.linkedin.com/in/vishnukanth-k-a5552327b/)')
+
